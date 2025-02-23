@@ -1,4 +1,4 @@
-from vosk import Model, KaldiRecognizer
+from vosk import Model, KaldiRecognizer, SetLogLevel
 import whisper
 import json
 import os
@@ -36,7 +36,13 @@ class SpeechService:
             print("Загрузка русской модели Vosk...")
             if not os.path.exists("models/vosk-model-ru"):
                 raise Exception("Пожалуйста, скачайте русскую модель")
-            cls._model_ru = Model("models/vosk-model-ru")
+            
+            SetLogLevel(-1)
+            
+            cls._model_ru = Model("models/vosk-model-ru", 
+                              model_load_threads=2,
+                              beam=10,
+                              max_active=5000)
             print("Русская модель Vosk загружена!")
         return cls._model_ru
     
