@@ -39,10 +39,7 @@ class SpeechService:
             
             SetLogLevel(-1)
             
-            cls._model_ru = Model("models/vosk-model-ru", 
-                              model_load_threads=2,
-                              beam=10,
-                              max_active=5000)
+            cls._model_ru = Model("models/vosk-model-ru")
             print("Русская модель Vosk загружена!")
         return cls._model_ru
     
