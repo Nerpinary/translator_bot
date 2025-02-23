@@ -7,17 +7,14 @@ import re
 from typing import Optional
 
 class SpeechService:
-    # Статические переменные для моделей
     _model_ru: Optional[Model] = None
     _whisper_model = None
     
-    # Вопросительные слова и фразы для русского языка
     QUESTION_WORDS_RU = {
         'что', 'где', 'когда', 'почему', 'зачем', 'как', 'какой', 'какая', 'какое', 
         'какие', 'кто', 'чей', 'чья', 'чье', 'чьи', 'сколько', 'куда', 'откуда'
     }
     
-    # Вопросительные конструкции
     QUESTION_PATTERNS_RU = [
         r'\bты\b.*\?$',
         r'\bвы\b.*\?$',
@@ -53,7 +50,6 @@ class SpeechService:
         return cls._whisper_model
     
     def __init__(self):
-        # Предварительно загружаем модели при создании сервиса
         self.get_model_ru()
         self.get_whisper_model()
     
@@ -61,30 +57,26 @@ class SpeechService:
         """Определяет, является ли предложение вопросом"""
         text = text.lower().strip()
         
-        # Проверяем вопросительные слова в начале предложения
         words = text.split()
         first_word = words[0] if words else ''
         
-        # Если первое слово вопросительное
         if first_word in self.QUESTION_WORDS_RU:
             return True
         
-        # Если есть вопросительное слово в середине предложения
         if any(word in self.QUESTION_WORDS_RU for word in words[1:]):
             return True
         
-        # Проверяем интонационные вопросы
         intonation_patterns = [
-            r'^[а-я\s]+\?$',  # Заканчивается на ?
-            r'.*\bли\b.*',    # Содержит частицу "ли"
-            r'^а\b.*',        # Начинается с "а"
-            r'.*\bправда\b.*',  # Содержит слово "правда"
-            r'.*\bда\b\s*$',    # Заканчивается на "да"
-            r'.*\bтак\b\s*$',   # Заканчивается на "так"
-            r'.*\bверно\b\s*$', # Заканчивается на "верно"
-            r'.*\bразве\b.*',   # Содержит "разве"
-            r'.*\bнеужели\b.*', # Содержит "неужели"
-            r'\bты\b.*',        # Начинается с личных местоимений
+            r'^[а-я\s]+\?$',
+            r'.*\bли\b.*',
+            r'^а\b.*',
+            r'.*\bправда\b.*',
+            r'.*\bда\b\s*$',
+            r'.*\bтак\b\s*$',
+            r'.*\bверно\b\s*$',
+            r'.*\bразве\b.*',
+            r'.*\bнеужели\b.*',
+            r'\bты\b.*',
             r'\bвы\b.*',
             r'\bон\b.*',
             r'\bона\b.*',
@@ -92,7 +84,6 @@ class SpeechService:
             r'\bони\b.*'
         ]
         
-        # Если соответствует любому из паттернов
         for pattern in intonation_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 return True
@@ -107,12 +98,9 @@ class SpeechService:
         text = text.strip()
         
         if is_russian:
-            # Для русского языка
-            # Проверяем на вопрос до добавления знаков препинания
             if self.is_question(text):
                 return text + "?"
             
-            # Проверяем на восклицательные слова/фразы
             exclamation_patterns = [
                 r'\b(привет|здравствуй|ура|здорово|круто|класс|супер|вау|ого|ничего себе|спасибо|благодарю|поздравляю)\b',
                 r'!\s*$'
@@ -124,7 +112,6 @@ class SpeechService:
             
             return text + "."
         else:
-            # Для тайского языка
             thai_question_particles = ['ไหม', 'หรือ', 'เหรอ', 'มั้ย', 'ใช่ไหม']
             
             for particle in thai_question_particles:
@@ -136,7 +123,6 @@ class SpeechService:
     def recognize_speech(self, audio_path: str, is_russian: bool = True) -> str:
         """Распознает речь из WAV файла и добавляет знаки препинания"""
         if is_russian:
-            # Используем Vosk для русского
             wf = wave.open(audio_path, "rb")
             rec = KaldiRecognizer(self.get_model_ru(), wf.getframerate())
             rec.SetWords(True)
@@ -150,10 +136,8 @@ class SpeechService:
             result = json.loads(rec.FinalResult())
             text = result.get('text', '')
             
-            # Добавляем знаки препинания
             return self.add_punctuation(text, is_russian=True)
         else:
-            # Используем Whisper для тайского
             result = self.get_whisper_model().transcribe(
                 audio_path,
                 language='th',
@@ -161,5 +145,4 @@ class SpeechService:
             )
             text = result.get('text', '').strip()
             
-            # Добавляем знаки препинания
             return self.add_punctuation(text, is_russian=False)

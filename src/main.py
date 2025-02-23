@@ -13,14 +13,11 @@ def main():
     """Точка входа в приложение"""
     print("Инициализация моделей распознавания речи...")
     
-    # Предварительно загружаем модели
     speech_service = SpeechService()
     
-    # Регистрируем обработчики
     register_handlers()
     
     print("Запуск бота...")
-    # Запускаем бота
     executor.start_polling(dp, skip_updates=True)
 
 if __name__ == '__main__':

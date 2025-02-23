@@ -7,7 +7,6 @@ import numpy as np
 
 class TTSService:
     def __init__(self):
-        # Загружаем Silero для русского
         self.device = torch.device('cpu')
         torch.set_num_threads(4)
         local_file = 'models/silero_model.pt'
@@ -33,10 +32,8 @@ class TTSService:
             if not text:
                 raise ValueError("Пустой текст для преобразования в речь")
                 
-            # Создаем временный файл
             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_audio:
                 if is_russian:
-                    # Используем Silero для русского
                     sample_rate = 48000
                     speaker = 'xenia'
                     
@@ -46,16 +43,13 @@ class TTSService:
                         sample_rate=sample_rate
                     )
                     
-                    # Проверяем, что аудио не пустое
                     if audio is None or len(audio) == 0:
                         raise ValueError("Не удалось сгенерировать аудио")
                     
-                    # Конвертируем в numpy array и сохраняем как WAV
                     audio_np = audio.numpy()
                     sf.write(temp_audio.name, audio_np, sample_rate)
                     
                 else:
-                    # Используем gTTS для тайского
                     tts = gTTS(text=text, lang='th', slow=False)
                     tts.save(temp_audio.name)
                 
