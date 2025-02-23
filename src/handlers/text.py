@@ -2,12 +2,13 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from src.handlers.common import TranslatorStates
 from src.services.ai import AITranslator
+from gtts import gTTS
+import os
 
 translator = AITranslator()
 
 async def process_language_selection(message: types.Message, state: FSMContext):
     """Обработка выбора языка перевода"""
-    # Сначала сбрасываем текущее состояние
     await state.finish()
     
     if message.text == "🇷🇺 Русский → 🇹🇭 Тайский":
@@ -25,7 +26,20 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
         
     await message.answer("🔄 Переводим...")
     translated = await translator.translate(message.text, "Russian", "Thai")
-    await message.answer(f"🇹🇭 {translated}")
+    
+    try:
+        os.makedirs("temp", exist_ok=True)
+        tts = gTTS(text=translated, lang='th')
+        audio_path = f"temp/voice_{message.message_id}.mp3"
+        tts.save(audio_path)
+        
+        await message.answer(f"🇹🇭 {translated}")
+        await message.answer_voice(open(audio_path, 'rb'))
+        
+        os.remove(audio_path)
+    except Exception as e:
+        print(f"Ошибка создания аудио: {e}")
+        await message.answer(f"🇹🇭 {translated}")
 
 async def translate_th_to_ru(message: types.Message, state: FSMContext):
     """Перевод с тайского на русский"""
@@ -35,20 +49,31 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
         
     await message.answer("🔄 กำลังแปล...")
     translated = await translator.translate(message.text, "Thai", "Russian")
-    await message.answer(f"🇷🇺 {translated}")
+    
+    try:
+        os.makedirs("temp", exist_ok=True)
+        tts = gTTS(text=translated, lang='ru')
+        audio_path = f"temp/voice_{message.message_id}.mp3"
+        tts.save(audio_path)
+        
+        await message.answer(f"🇷🇺 {translated}")
+        await message.answer_voice(open(audio_path, 'rb'))
+        
+        os.remove(audio_path)
+    except Exception as e:
+        print(f"Ошибка создания аудио: {e}")
+        await message.answer(f"🇷🇺 {translated}")
 
 def register_handlers(dp: Dispatcher):
-    # Обработчики выбора языка
     dp.register_message_handler(
         process_language_selection,
         lambda msg: msg.text in [
             "🇷🇺 Русский → 🇹🇭 Тайский",
             "🇹🇭 Тайский → 🇷🇺 Русский"
         ],
-        state="*"  # Обрабатываем в любом состоянии
+        state="*"
     )
     
-    # Обработчики текста для перевода
     dp.register_message_handler(
         translate_ru_to_th,
         state=TranslatorStates.waiting_for_text_ru_th
