@@ -24,6 +24,7 @@ class AITranslator:
         "охуеть": "обалдеть",
         "сука": "блин или самка собаки (если в контексте)",
         "сучка": "плохой человек или самка собаки (если в контексте)",
+        "сучки": "плохие люди или самки собак (если в контексте)",
         "сучара": "плохой человек",
         "бля": "блин",
         "блядь": "блин",
@@ -162,12 +163,24 @@ class AITranslator:
             self.handle_rate_limit()
             
             prompt = f"""
-            Translate this text from {from_lang} to {to_lang}.
-            Maintain the original meaning and tone.
-            Preserve any special characters and formatting.
-            Return only the translation, without any additional text.
-            
-            Text: {cleaned_text}
+            You are a professional translator with deep knowledge of {from_lang} and {to_lang}.
+            Your task is to translate the following text, ensuring accuracy and natural language.
+
+            Important rules:
+            1. ALWAYS provide a translation, even if the word is complex or unusual
+            2. If a direct translation is difficult, provide the closest meaningful equivalent
+            3. For adjectives, consider multiple possible contexts
+            4. For idioms, translate the meaning rather than word-by-word
+            5. Preserve any emotional tone or formality level
+            6. If a word has multiple meanings, choose the most likely one based on common usage
+            7. For unclear cases, provide the most neutral and widely understood variant
+
+            Original text: {cleaned_text}
+            Original language: {from_lang}
+            Target language: {to_lang}
+
+            Translate the text above following these rules.
+            Return ONLY the translation, without explanations or alternatives.
             """
             
             for attempt in range(3):
@@ -176,16 +189,18 @@ class AITranslator:
                     
                     if not response.parts:
                         if attempt < 2:
-                            print(f"Empty response on attempt {attempt + 1}, retrying...")
+                            if attempt == 1:
+                                prompt = f"Translate this from {from_lang} to {to_lang}, simple words only: {cleaned_text}"
+                            print(f"Empty response on attempt {attempt + 1}, retrying with simplified prompt...")
                             time.sleep(1)
                             continue
                         return "Ошибка: Не удалось получить перевод"
                     
                     translated_text = response.text.strip()
                     
-                    if not translated_text or translated_text.isspace():
+                    if not translated_text or translated_text.isspace() or len(translated_text) < 2:
                         if attempt < 2:
-                            print(f"Empty translation on attempt {attempt + 1}, retrying...")
+                            print(f"Invalid translation on attempt {attempt + 1}, retrying...")
                             time.sleep(1)
                             continue
                         return "Ошибка: Некорректный перевод"
@@ -196,6 +211,8 @@ class AITranslator:
                 except Exception as e:
                     if attempt < 2:
                         print(f"Translation attempt {attempt + 1} failed: {e}")
+                        if attempt == 1:
+                            prompt = f"Translate: {cleaned_text}"
                         time.sleep(1)
                         continue
                     raise
