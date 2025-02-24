@@ -2,7 +2,6 @@ import google.generativeai as genai
 from src.config import GOOGLE_API_KEY
 
 class AITranslator:
-    # Словарь замен (можно расширять)
     REPLACEMENTS = {
         "блять": "блин",
         "хуй": "мужское достоинство",
@@ -61,6 +60,53 @@ class AITranslator:
         "пидарасы": "грязные люди или люди нетрадиционной сексуальной ориентации",
         "педик": "человек нетрадиционной сексуальной ориентации",
         "педики": "люди нетрадиционной сексуальной ориентации", 
+        "fuck": "darn",
+        "fucking": "freaking",
+        "fucked": "messed up",
+        "shit": "stuff",
+        "shitty": "bad",
+        "bitch": "mean person",
+        "bastard": "bad person",
+        "ass": "bottom",
+        "asshole": "mean person",
+        "dick": "mean person",
+        "pussy": "coward",
+        "cunt": "mean person",
+        "whore": "bad person",
+        "slut": "bad person",
+        "motherfucker": "very bad person",
+        "cocksucker": "bad person",
+        "damn": "darn",
+        "goddamn": "darn",
+        "piss": "urinate",
+        "pissed": "angry",
+        "cock": "rooster",
+        "wtf": "what the heck",
+        "stfu": "be quiet",
+        "fck": "darn",
+        "fuk": "darn",
+        "fucker": "bad person",
+        "bullshit": "nonsense",
+        "ควย": "แย่",
+        "เหี้ย": "แย่มาก",
+        "สัส": "ไม่ดี",
+        "มึง": "คุณ",
+        "กู": "ฉัน",
+        "เย็ด": "มีเพศสัมพันธ์",
+        "หี": "อวัยวะเพศหญิง",
+        "จู๋": "อวัยวะเพศชาย",
+        "ไอ้": "คุณ",
+        "อี": "คุณ",
+        "ชิบหาย": "แย่มาก",
+        "รึง": "หรือ",
+        "มรึง": "คุณ",
+        "กระหรี่": "หญิงขายบริการ",
+        "อีดอก": "คนไม่ดี",
+        "ส้นตีน": "คนไม่ดี",
+        "หน้าหี": "คนไม่ดี",
+        "ไอ้สัตว์": "คนไม่ดี",
+        "สถุล": "ไม่ดี",
+        "ระยำ": "แย่",
     }
 
     def __init__(self):
@@ -83,7 +129,6 @@ class AITranslator:
     async def translate(self, text: str, from_lang: str, to_lang: str) -> str:
         """Переводит текст используя Google Gemini"""
         try:
-            # Сначала очищаем текст
             cleaned_text = self.clean_text(text)
             
             prompt = f"""

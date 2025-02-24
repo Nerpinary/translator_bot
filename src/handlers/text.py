@@ -30,8 +30,12 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
-                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
+    if message.text in [
+        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
+    ]:
         await process_language_selection(message, state)
         return
         
@@ -57,8 +61,12 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
-                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
+    if message.text in [
+        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
+    ]:
         await process_language_selection(message, state)
         return
         
@@ -84,8 +92,12 @@ async def translate_en_to_th(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
-                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
+    if message.text in [
+        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
+    ]:
         await process_language_selection(message, state)
         return
         
@@ -111,8 +123,12 @@ async def translate_th_to_en(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
-                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
+    if message.text in [
+        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
+    ]:
         await process_language_selection(message, state)
         return
         
@@ -137,10 +153,10 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(
         process_language_selection,
         lambda msg: msg.text in [
-            "🇷🇺 Русский → 🇹🇭 Тайский",
-            "🇹🇭 Тайский → 🇷🇺 Русский",
-            "🇬🇧 Английский → 🇹🇭 Тайский",
-            "🇹🇭 Тайский → 🇬🇧 Английский"
+            "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+            "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+            "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+            "🇹🇭 ไทย (Thai) → 🇬🇧 English"
         ],
         state="*"
     )
@@ -168,9 +184,36 @@ def register_handlers(dp: Dispatcher):
         state="*"
     )
 
-async def handle_voice(message: types.Message):
+async def handle_voice(message: types.Message, state: FSMContext):
     """Обработчик голосовых сообщений"""
-    await message.reply(
-        "⚠️ Извините, но распознавание голосовых сообщений временно не поддерживается.\n"
-        "Пожалуйста, отправьте ваше сообщение текстом."
-    )
+    current_state = await state.get_state()
+    
+    if current_state == TranslatorStates.waiting_for_text_ru_th.state:
+        await message.reply(
+            "⚠️ Извините, но распознавание голосовых сообщений временно не поддерживается.\n"
+            "Пожалуйста, отправьте ваше сообщение текстом."
+        )
+    elif current_state == TranslatorStates.waiting_for_text_th_ru.state:
+        await message.reply(
+            "⚠️ ขออภัย ขณะนี้ไม่รองรับการรับรู้ข้อความเสียง\n"
+            "กรุณาส่งข้อความเป็นตัวอักษร"
+        )
+    elif current_state == TranslatorStates.waiting_for_text_en_th.state:
+        await message.reply(
+            "⚠️ Sorry, voice message recognition is temporarily unavailable.\n"
+            "Please send your message as text."
+        )
+    elif current_state == TranslatorStates.waiting_for_text_th_en.state:
+        await message.reply(
+            "⚠️ ขออภัย ขณะนี้ไม่รองรับการรับรู้ข้อความเสียง\n"
+            "กรุณาส่งข้อความเป็นตัวอักษร"
+        )
+    else:
+        await message.reply(
+            "⚠️ Извините, но распознавание голосовых сообщений временно не поддерживается.\n"
+            "Пожалуйста, отправьте ваше сообщение текстом.\n\n"
+            "⚠️ Sorry, voice message recognition is temporarily unavailable.\n"
+            "Please send your message as text.\n\n"
+            "⚠️ ขออภัย ขณะนี้ไม่รองรับการรับรู้ข้อความเสียง\n"
+            "กรุณาส่งข้อความเป็นตัวอักษร"
+        )
