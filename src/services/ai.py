@@ -1,5 +1,7 @@
 import google.generativeai as genai
-from src.config import GOOGLE_API_KEY
+from config import GOOGLE_API_KEY
+import time
+from typing import Optional
 
 class AITranslator:
     REPLACEMENTS = {
@@ -110,13 +112,27 @@ class AITranslator:
     }
 
     def __init__(self):
-        genai.configure(api_key=GOOGLE_API_KEY)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self._model = None
+        self._last_request_time = 0
+        self.RATE_LIMIT_DELAY = 0.5
+
+    @property
+    def model(self):
+        """Ленивая инициализация модели"""
+        if self._model is None:
+            genai.configure(api_key=GOOGLE_API_KEY)
+            self._model = genai.GenerativeModel('gemini-pro')
+        return self._model
 
     def clean_text(self, text: str) -> str:
-        """Заменяет нецензурные слова на приемлемые аналоги"""
+        """Улучшенная очистка текста"""
+        if not text or text.isspace():
+            return text
+            
         text_lower = text.lower()
         result = text
+        
+        result = ' '.join(result.split())
         
         for bad, good in self.REPLACEMENTS.items():
             if f" {bad} " in f" {text_lower} ":
@@ -124,26 +140,73 @@ class AITranslator:
                 result = result.replace(bad.capitalize(), good.capitalize())
                 result = result.replace(bad.upper(), good.upper())
         
-        return result
+        return result.strip()
+
+    def handle_rate_limit(self):
+        """Обработка ограничения частоты запросов"""
+        current_time = time.time()
+        time_since_last = current_time - self._last_request_time
+        if time_since_last < self.RATE_LIMIT_DELAY:
+            time.sleep(self.RATE_LIMIT_DELAY - time_since_last)
+        self._last_request_time = time.time()
 
     async def translate(self, text: str, from_lang: str, to_lang: str) -> str:
-        """Переводит текст используя Google Gemini"""
+        """Улучшенный перевод текста"""
+        if not text or text.isspace():
+            return "Ошибка: Пустой текст"
+
         try:
             cleaned_text = self.clean_text(text)
+            print(f"Translating: '{cleaned_text}' from {from_lang} to {to_lang}")
+            
+            self.handle_rate_limit()
             
             prompt = f"""
             Translate this text from {from_lang} to {to_lang}.
-            Return only the translation, without any additional comments.
+            Maintain the original meaning and tone.
+            Preserve any special characters and formatting.
+            Return only the translation, without any additional text.
+            
             Text: {cleaned_text}
             """
             
-            response = await self.model.generate_content_async(prompt)
-            
-            if not response.parts or "text" not in response.parts[0]:
-                return f"Ошибка перевода. Попробуйте переформулировать сообщение."
-            
-            return response.text.strip()
-            
+            for attempt in range(3):
+                try:
+                    response = await self.model.generate_content_async(prompt)
+                    
+                    if not response.parts:
+                        if attempt < 2:
+                            print(f"Empty response on attempt {attempt + 1}, retrying...")
+                            time.sleep(1)
+                            continue
+                        return "Ошибка: Не удалось получить перевод"
+                    
+                    translated_text = response.text.strip()
+                    
+                    if not translated_text or translated_text.isspace():
+                        if attempt < 2:
+                            print(f"Empty translation on attempt {attempt + 1}, retrying...")
+                            time.sleep(1)
+                            continue
+                        return "Ошибка: Некорректный перевод"
+                    
+                    print(f"Translation success: '{translated_text}'")
+                    return translated_text
+                    
+                except Exception as e:
+                    if attempt < 2:
+                        print(f"Translation attempt {attempt + 1} failed: {e}")
+                        time.sleep(1)
+                        continue
+                    raise
+                    
         except Exception as e:
-            print(f"Ошибка перевода: {str(e)}")
-            return f"Ошибка перевода. Попробуйте другую формулировку."
+            error_msg = str(e)
+            print(f"Translation error: {error_msg}")
+            
+            if "quota" in error_msg.lower():
+                return "Ошибка: Превышен лимит запросов. Попробуйте позже."
+            elif "timeout" in error_msg.lower():
+                return "Ошибка: Сервер не отвечает. Попробуйте позже."
+            else:
+                return "Ошибка перевода. Попробуйте другую формулировку."
