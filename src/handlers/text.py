@@ -30,17 +30,28 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in [
-        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
-        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
-    ]:
+    if message.text in ["🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+                       "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇬🇧 English"]:
         await process_language_selection(message, state)
         return
         
+    original_text = message.text
+    cleaned_text = translator.clean_text(message.text)
+    
+    if cleaned_text != original_text:
+        await message.reply(
+            "⚠️ Ваше сообщение содержало неприемлемые слова.\n"
+            "Они были заменены на более подходящие варианты."
+        )
+    
     await message.answer("🔄 Переводим...")
-    translated = await translator.translate(message.text, "Russian", "Thai")
+    translated = await translator.translate(cleaned_text, "Russian", "Thai")
+    
+    if "Ошибка перевода" in translated:
+        await message.answer(f"❌ {translated}")
+        return
     
     try:
         os.makedirs("temp", exist_ok=True)
@@ -61,18 +72,29 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in [
-        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
-        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
-    ]:
+    if message.text in ["🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+                       "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇬🇧 English"]:
         await process_language_selection(message, state)
         return
         
-    await message.answer("🔄 กำลังแปล...")
-    translated = await translator.translate(message.text, "Thai", "Russian")
+    original_text = message.text
+    cleaned_text = translator.clean_text(message.text)
     
+    if cleaned_text != original_text:
+        await message.reply(
+            "⚠️ ข้อความของคุณมีคำที่ไม่เหมาะสม\n"
+            "พวกเขาได้รับการแทนที่ด้วยตัวเลือกที่เหมาะสมกว่า"
+        )
+    
+    await message.answer("🔄 กำลังแปล...")
+    translated = await translator.translate(cleaned_text, "Thai", "Russian")
+    
+    if "Ошибка перевода" in translated:
+        await message.answer(f"❌ {translated}")
+        return
+        
     try:
         os.makedirs("temp", exist_ok=True)
         tts = gTTS(text=translated, lang='ru')
@@ -92,18 +114,29 @@ async def translate_en_to_th(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in [
-        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
-        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
-    ]:
+    if message.text in ["🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+                       "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇬🇧 English"]:
         await process_language_selection(message, state)
         return
         
-    await message.answer("🔄 Translating...")
-    translated = await translator.translate(message.text, "English", "Thai")
+    original_text = message.text
+    cleaned_text = translator.clean_text(message.text)
     
+    if cleaned_text != original_text:
+        await message.reply(
+            "⚠️ Your message contained inappropriate words.\n"
+            "They have been replaced with more suitable alternatives."
+        )
+    
+    await message.answer("🔄 Translating...")
+    translated = await translator.translate(cleaned_text, "English", "Thai")
+    
+    if "Translation error" in translated or "Ошибка перевода" in translated:
+        await message.answer(f"❌ {translated}")
+        return
+        
     try:
         os.makedirs("temp", exist_ok=True)
         tts = gTTS(text=translated, lang='th')
@@ -123,18 +156,29 @@ async def translate_th_to_en(message: types.Message, state: FSMContext):
     if message.text.startswith('/'):
         return
         
-    if message.text in [
-        "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
-        "🇬🇧 English → 🇹🇭 ไทย (Thai)",
-        "🇹🇭 ไทย (Thai) → 🇬🇧 English"
-    ]:
+    if message.text in ["🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)",
+                       "🇬🇧 English → 🇹🇭 ไทย (Thai)",
+                       "🇹🇭 ไทย (Thai) → 🇬🇧 English"]:
         await process_language_selection(message, state)
         return
         
-    await message.answer("🔄 กำลังแปล...")
-    translated = await translator.translate(message.text, "Thai", "English")
+    original_text = message.text
+    cleaned_text = translator.clean_text(message.text)
     
+    if cleaned_text != original_text:
+        await message.reply(
+            "⚠️ ข้อความของคุณมีคำที่ไม่เหมาะสม\n"
+            "พวกเขาได้รับการแทนที่ด้วยตัวเลือกที่เหมาะสมกว่า"
+        )
+    
+    await message.answer("🔄 กำลังแปล...")
+    translated = await translator.translate(cleaned_text, "Thai", "English")
+    
+    if "Translation error" in translated or "Ошибка перевода" in translated:
+        await message.answer(f"❌ {translated}")
+        return
+        
     try:
         os.makedirs("temp", exist_ok=True)
         tts = gTTS(text=translated, lang='en')
@@ -162,7 +206,6 @@ def register_handlers(dp: Dispatcher):
         state="*"
     )
     
-    # Обработчики текста для перевода
     dp.register_message_handler(
         translate_ru_to_th,
         state=TranslatorStates.waiting_for_text_ru_th
