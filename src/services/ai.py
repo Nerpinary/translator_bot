@@ -114,14 +114,14 @@ class AITranslator:
     }
 
     COMPLEX_WORDS = {
-        "сочн": {
-            "th": "ฉ่ำ",
-            "context": {
-                "фрукты": "ฉ่ำน้ำ",
-                "мясо": "นุ่มฉ่ำ",
-                "цвета": "สดใส",
+        "сочн": {  # основа слова
+            "th": {
+                "default": "ฉ่ำ",  # базовый перевод
+                "мясо": "เนื้อนุ่มฉ่ำ",  # полная фраза для мяса
+                "стейк": "สเต็กเนื้อนุ่มฉ่ำ",  # полная фраза для стейка
+                "фрукты": "ผลไม้ฉ่ำน้ำ",  # полная фраза для фруктов
             }
-        }
+        },
     }
 
     def __init__(self):
@@ -174,14 +174,31 @@ class AITranslator:
             
             modified_text = cleaned_text
             if from_lang == "Russian" and to_lang == "Thai":
+                words = cleaned_text.lower().split()
                 for stem, translations in self.COMPLEX_WORDS.items():
-                    matches = re.finditer(f"{stem}[а-я]*", modified_text.lower())
-                    for match in matches:
-                        original_word = modified_text[match.start():match.end()]
-                        modified_text = modified_text.replace(
-                            original_word, 
-                            f"<complex>{translations['th']}</complex>"
-                        )
+                    matches = [i for i, word in enumerate(words) 
+                             if re.search(f"{stem}[а-я]*", word)]
+                    
+                    for match_idx in matches:
+                        next_word = words[match_idx + 1] if match_idx + 1 < len(words) else ""
+                        
+                        if next_word in translations["th"]:
+                            translation = translations["th"][next_word]
+                        else:
+                            translation = translations["th"]["default"]
+                            
+                        if next_word in translations["th"]:
+                            modified_text = modified_text.replace(
+                                f"{words[match_idx]} {next_word}",
+                                translation
+                            )
+                        else:
+                            modified_text = re.sub(
+                                f"{stem}[а-я]*",
+                                translation,
+                                modified_text,
+                                flags=re.IGNORECASE
+                            )
             
             self.handle_rate_limit()
             

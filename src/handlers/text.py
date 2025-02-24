@@ -37,8 +37,11 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
         await process_language_selection(message, state)
         return
 
-    await message.answer("🔄 Переводим...")
+    progress_msg = await message.answer("🔄 Переводим...")
+    
     translated = await translator.translate(message.text, "Russian", "Thai")
+    
+    await progress_msg.delete()
     
     if "Ошибка" in translated:
         await message.answer(f"❌ {translated}")
