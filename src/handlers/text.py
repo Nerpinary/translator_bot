@@ -4,6 +4,7 @@ from src.handlers.common import TranslatorStates
 from src.services.ai import AITranslator
 from gtts import gTTS
 import os
+from aiogram.types import ContentType
 
 translator = AITranslator()
 
@@ -53,7 +54,6 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
 
 async def translate_th_to_ru(message: types.Message, state: FSMContext):
     """Перевод с тайского на русский"""
-    # Пропускаем команды
     if message.text.startswith('/'):
         return
         
@@ -81,7 +81,6 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
 
 async def translate_en_to_th(message: types.Message, state: FSMContext):
     """Перевод с английского на тайский"""
-    # Пропускаем команды
     if message.text.startswith('/'):
         return
         
@@ -109,7 +108,6 @@ async def translate_en_to_th(message: types.Message, state: FSMContext):
 
 async def translate_th_to_en(message: types.Message, state: FSMContext):
     """Перевод с тайского на английский"""
-    # Пропускаем команды
     if message.text.startswith('/'):
         return
         
@@ -162,4 +160,17 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(
         translate_th_to_en,
         state=TranslatorStates.waiting_for_text_th_en
+    )
+    
+    dp.register_message_handler(
+        handle_voice,
+        content_types=[ContentType.VOICE, ContentType.AUDIO],
+        state="*"
+    )
+
+async def handle_voice(message: types.Message):
+    """Обработчик голосовых сообщений"""
+    await message.reply(
+        "⚠️ Извините, но распознавание голосовых сообщений временно не поддерживается.\n"
+        "Пожалуйста, отправьте ваше сообщение текстом."
     )
