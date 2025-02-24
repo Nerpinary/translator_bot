@@ -46,8 +46,9 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
             "Они были заменены на более подходящие варианты."
         )
     
-    await message.answer("🔄 Переводим...")
+    progress_message = await message.answer("🔄 Переводим...")
     translated = await translator.translate(cleaned_text, "Russian", "Thai")
+    await progress_message.delete()
     
     if "Ошибка перевода" in translated:
         await message.answer(f"❌ {translated}")
@@ -88,8 +89,9 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
             "พวกเขาได้รับการแทนที่ด้วยตัวเลือกที่เหมาะสมกว่า"
         )
     
-    await message.answer("🔄 กำลังแปล...")
+    progress_message = await message.answer("🔄 กำลังแปล...")
     translated = await translator.translate(cleaned_text, "Thai", "Russian")
+    await progress_message.delete()
     
     if "Ошибка перевода" in translated:
         await message.answer(f"❌ {translated}")
@@ -130,8 +132,9 @@ async def translate_en_to_th(message: types.Message, state: FSMContext):
             "They have been replaced with more suitable alternatives."
         )
     
-    await message.answer("🔄 Translating...")
+    progress_message = await message.answer("🔄 Translating...")
     translated = await translator.translate(cleaned_text, "English", "Thai")
+    await progress_message.delete()
     
     if "Translation error" in translated or "Ошибка перевода" in translated:
         await message.answer(f"❌ {translated}")
@@ -172,8 +175,9 @@ async def translate_th_to_en(message: types.Message, state: FSMContext):
             "พวกเขาได้รับการแทนที่ด้วยตัวเลือกที่เหมาะสมกว่า"
         )
     
-    await message.answer("🔄 กำลังแปล...")
+    progress_message = await message.answer("🔄 กำลังแปล...")
     translated = await translator.translate(cleaned_text, "Thai", "English")
+    await progress_message.delete()
     
     if "Translation error" in translated or "Ошибка перевода" in translated:
         await message.answer(f"❌ {translated}")
