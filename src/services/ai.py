@@ -1,5 +1,5 @@
 import google.generativeai as genai
-from config import GOOGLE_API_KEY
+from src.config import GOOGLE_API_KEY
 import time
 from typing import Optional
 

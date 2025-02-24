@@ -3,9 +3,9 @@ import os
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 LANGUAGES = {
     'ru': '🇷🇺 Русский',
