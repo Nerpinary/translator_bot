@@ -1,15 +1,17 @@
 #!/bin/bash
 
-mkdir -p models
+mkdir -p temp
 
-if [ ! -d "models/vosk-model-ru" ]; then
-    echo "Downloading Vosk model..."
-    cd models
-    curl -O https://alphacephei.com/vosk/models/vosk-model-ru-0.22.zip
-    unzip vosk-model-ru-0.22.zip
-    mv vosk-model-ru-0.22 vosk-model-ru
-    rm vosk-model-ru-0.22.zip
-    cd ..
-fi
+echo "🚀 Запуск бота..."
 
+cleanup() {
+    echo "👋 Бот остановлен $(date '+%Y-%m-%d %H:%M:%S')"
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
+echo "✅ Бот запущен $(date '+%Y-%m-%d %H:%M:%S')"
 python3 run.py
+
+echo "❌ Бот завершил работу $(date '+%Y-%m-%d %H:%M:%S')"
