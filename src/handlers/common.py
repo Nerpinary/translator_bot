@@ -2,21 +2,23 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 class TranslatorStates(StatesGroup):
-    waiting_for_text_ru_th = State()  # Ожидание текста для перевода RU -> TH
-    waiting_for_text_th_ru = State()  # Ожидание текста для перевода TH -> RU
+    waiting_for_text_ru_th = State()
+    waiting_for_text_th_ru = State()
+    waiting_for_text_en_th = State()
+    waiting_for_text_th_en = State()
 
 async def cmd_start(message: types.Message):
     """
     Обработчик команды /start
     """
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(
-        types.KeyboardButton("🇷🇺 Русский → 🇹🇭 Тайский"),
-        types.KeyboardButton("🇹🇭 Тайский → 🇷🇺 Русский")
-    )
+    keyboard.add(types.KeyboardButton("🇷🇺 Русский → 🇹🇭 Тайский"))
+    keyboard.add(types.KeyboardButton("🇹🇭 Тайский → 🇷🇺 Русский"))
+    keyboard.add(types.KeyboardButton("🇬🇧 Английский → 🇹🇭 Тайский"))
+    keyboard.add(types.KeyboardButton("🇹🇭 Тайский → 🇬🇧 Английский"))
     
     await message.answer(
-        "👋 Привет! Я бот-переводчик с русского на тайский и наоборот.\n\n"
+        "👋 Привет! Я бот-переводчик.\n\n"
         "🔄 Выберите направление перевода:",
         reply_markup=keyboard
     )

@@ -17,10 +17,17 @@ async def process_language_selection(message: types.Message, state: FSMContext):
     elif message.text == "🇹🇭 Тайский → 🇷🇺 Русский":
         await TranslatorStates.waiting_for_text_th_ru.set()
         await message.answer("ส่งข้อความที่ต้องการแปลเป็นภาษารัสเซีย:")
+    elif message.text == "🇬🇧 Английский → 🇹🇭 Тайский":
+        await TranslatorStates.waiting_for_text_en_th.set()
+        await message.answer("Enter text to translate to Thai:")
+    elif message.text == "🇹🇭 Тайский → 🇬🇧 Английский":
+        await TranslatorStates.waiting_for_text_th_en.set()
+        await message.answer("ส่งข้อความที่ต้องการแปลเป็นภาษาอังกฤษ:")
 
 async def translate_ru_to_th(message: types.Message, state: FSMContext):
     """Перевод с русского на тайский"""
-    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский"]:
+    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
+                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
         await process_language_selection(message, state)
         return
         
@@ -43,7 +50,8 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
 
 async def translate_th_to_ru(message: types.Message, state: FSMContext):
     """Перевод с тайского на русский"""
-    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский"]:
+    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
+                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
         await process_language_selection(message, state)
         return
         
@@ -62,14 +70,64 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
         os.remove(audio_path)
     except Exception as e:
         print(f"Ошибка создания аудио: {e}")
-        await message.answer(f"🇷🇺 {translated}")
+        await message.answer(f"��🇺 {translated}")
+
+async def translate_en_to_th(message: types.Message, state: FSMContext):
+    """Перевод с английского на тайский"""
+    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
+                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
+        await process_language_selection(message, state)
+        return
+        
+    await message.answer("🔄 Translating...")
+    translated = await translator.translate(message.text, "English", "Thai")
+    
+    try:
+        os.makedirs("temp", exist_ok=True)
+        tts = gTTS(text=translated, lang='th')
+        audio_path = f"temp/voice_{message.message_id}.mp3"
+        tts.save(audio_path)
+        
+        await message.answer(f"🇹🇭 {translated}")
+        await message.answer_voice(open(audio_path, 'rb'))
+        
+        os.remove(audio_path)
+    except Exception as e:
+        print(f"Ошибка создания аудио: {e}")
+        await message.answer(f"🇹🇭 {translated}")
+
+async def translate_th_to_en(message: types.Message, state: FSMContext):
+    """Перевод с тайского на английский"""
+    if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
+                       "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
+        await process_language_selection(message, state)
+        return
+        
+    await message.answer("🔄 กำลังแปล...")
+    translated = await translator.translate(message.text, "Thai", "English")
+    
+    try:
+        os.makedirs("temp", exist_ok=True)
+        tts = gTTS(text=translated, lang='en')
+        audio_path = f"temp/voice_{message.message_id}.mp3"
+        tts.save(audio_path)
+        
+        await message.answer(f"🇬🇧 {translated}")
+        await message.answer_voice(open(audio_path, 'rb'))
+        
+        os.remove(audio_path)
+    except Exception as e:
+        print(f"Ошибка создания аудио: {e}")
+        await message.answer(f"🇬🇧 {translated}")
 
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(
         process_language_selection,
         lambda msg: msg.text in [
             "🇷🇺 Русский → 🇹🇭 Тайский",
-            "🇹🇭 Тайский → 🇷🇺 Русский"
+            "🇹🇭 Тайский → 🇷🇺 Русский",
+            "🇬🇧 Английский → 🇹🇭 Тайский",
+            "🇹🇭 Тайский → 🇬🇧 Английский"
         ],
         state="*"
     )
@@ -81,4 +139,12 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(
         translate_th_to_ru,
         state=TranslatorStates.waiting_for_text_th_ru
+    )
+    dp.register_message_handler(
+        translate_en_to_th,
+        state=TranslatorStates.waiting_for_text_en_th
+    )
+    dp.register_message_handler(
+        translate_th_to_en,
+        state=TranslatorStates.waiting_for_text_th_en
     )
