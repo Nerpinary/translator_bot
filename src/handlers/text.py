@@ -12,16 +12,16 @@ async def process_language_selection(message: types.Message, state: FSMContext):
     """Обработка выбора языка перевода"""
     await state.finish()
     
-    if message.text == "🇷🇺 Русский → 🇹🇭 Тайский":
+    if message.text == "🇷🇺 Русский (Russian) → 🇹🇭 ไทย (Thai)":
         await TranslatorStates.waiting_for_text_ru_th.set()
         await message.answer("Отправьте текст для перевода на тайский язык:")
-    elif message.text == "🇹🇭 Тайский → 🇷🇺 Русский":
+    elif message.text == "🇹🇭 ไทย (Thai) → 🇷🇺 Русский (Russian)":
         await TranslatorStates.waiting_for_text_th_ru.set()
         await message.answer("ส่งข้อความที่ต้องการแปลเป็นภาษารัสเซีย:")
-    elif message.text == "🇬🇧 Английский → 🇹🇭 Тайский":
+    elif message.text == "🇬🇧 English → 🇹🇭 ไทย (Thai)":
         await TranslatorStates.waiting_for_text_en_th.set()
         await message.answer("Enter text to translate to Thai:")
-    elif message.text == "🇹🇭 Тайский → 🇬🇧 Английский":
+    elif message.text == "🇹🇭 ไทย (Thai) → 🇬🇧 English":
         await TranslatorStates.waiting_for_text_th_en.set()
         await message.answer("ส่งข้อความที่ต้องการแปลเป็นภาษาอังกฤษ:")
 
@@ -150,6 +150,7 @@ async def translate_th_to_en(message: types.Message, state: FSMContext):
         await message.answer(f"🇬🇧 {translated}")
 
 def register_handlers(dp: Dispatcher):
+    """Регистрация обработчиков"""
     dp.register_message_handler(
         process_language_selection,
         lambda msg: msg.text in [
@@ -161,6 +162,7 @@ def register_handlers(dp: Dispatcher):
         state="*"
     )
     
+    # Обработчики текста для перевода
     dp.register_message_handler(
         translate_ru_to_th,
         state=TranslatorStates.waiting_for_text_ru_th
@@ -178,6 +180,7 @@ def register_handlers(dp: Dispatcher):
         state=TranslatorStates.waiting_for_text_th_en
     )
     
+    # Обработчик голосовых сообщений
     dp.register_message_handler(
         handle_voice,
         content_types=[ContentType.VOICE, ContentType.AUDIO],
