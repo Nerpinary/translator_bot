@@ -2,6 +2,7 @@ import google.generativeai as genai
 from src.config import GOOGLE_API_KEY
 import time
 from typing import Optional
+import re
 
 class AITranslator:
     REPLACEMENTS = {
@@ -112,6 +113,17 @@ class AITranslator:
         "ระยำ": "แย่",
     }
 
+    COMPLEX_WORDS = {
+        "сочн": {
+            "th": "ฉ่ำ",
+            "context": {
+                "фрукты": "ฉ่ำน้ำ",
+                "мясо": "นุ่มฉ่ำ",
+                "цвета": "สดใส",
+            }
+        }
+    }
+
     def __init__(self):
         self._model = None
         self._last_request_time = 0
@@ -159,6 +171,11 @@ class AITranslator:
         try:
             cleaned_text = self.clean_text(text)
             print(f"Translating: '{cleaned_text}' from {from_lang} to {to_lang}")
+            
+            if from_lang == "Russian" and to_lang == "Thai":
+                for stem, translations in self.COMPLEX_WORDS.items():
+                    if re.search(f"{stem}[а-я]*", cleaned_text.lower()):
+                        return translations["th"]
             
             self.handle_rate_limit()
             
