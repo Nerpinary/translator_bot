@@ -26,6 +26,9 @@ async def process_language_selection(message: types.Message, state: FSMContext):
 
 async def translate_ru_to_th(message: types.Message, state: FSMContext):
     """Перевод с русского на тайский"""
+    if message.text.startswith('/'):
+        return
+        
     if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
                        "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
         await process_language_selection(message, state)
@@ -50,6 +53,10 @@ async def translate_ru_to_th(message: types.Message, state: FSMContext):
 
 async def translate_th_to_ru(message: types.Message, state: FSMContext):
     """Перевод с тайского на русский"""
+    # Пропускаем команды
+    if message.text.startswith('/'):
+        return
+        
     if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
                        "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
         await process_language_selection(message, state)
@@ -70,10 +77,14 @@ async def translate_th_to_ru(message: types.Message, state: FSMContext):
         os.remove(audio_path)
     except Exception as e:
         print(f"Ошибка создания аудио: {e}")
-        await message.answer(f"��🇺 {translated}")
+        await message.answer(f"🇷🇺 {translated}")
 
 async def translate_en_to_th(message: types.Message, state: FSMContext):
     """Перевод с английского на тайский"""
+    # Пропускаем команды
+    if message.text.startswith('/'):
+        return
+        
     if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
                        "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
         await process_language_selection(message, state)
@@ -98,6 +109,10 @@ async def translate_en_to_th(message: types.Message, state: FSMContext):
 
 async def translate_th_to_en(message: types.Message, state: FSMContext):
     """Перевод с тайского на английский"""
+    # Пропускаем команды
+    if message.text.startswith('/'):
+        return
+        
     if message.text in ["🇷🇺 Русский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇷🇺 Русский",
                        "🇬🇧 Английский → 🇹🇭 Тайский", "🇹🇭 Тайский → 🇬🇧 Английский"]:
         await process_language_selection(message, state)
