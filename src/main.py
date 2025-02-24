@@ -1,24 +1,17 @@
-from aiogram import executor
-from src.bot import dp
-from src.handlers import common, text, voice
-from src.services.speech import SpeechService
+from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from src.config import BOT_TOKEN
+from src.handlers import common, text
 
-def register_handlers():
-    """Регистрация всех обработчиков"""
+async def main():
+    bot = Bot(token=BOT_TOKEN)
+    storage = MemoryStorage()
+    dp = Dispatcher(bot, storage=storage)
+    
     common.register_handlers(dp)
     text.register_handlers(dp)
-    voice.register_handlers(dp)
-
-def main():
-    """Точка входа в приложение"""
-    print("Инициализация моделей распознавания речи...")
     
-    speech_service = SpeechService()
-    
-    register_handlers()
-    
-    print("Запуск бота...")
-    executor.start_polling(dp, skip_updates=True)
+    await dp.start_polling()
 
 if __name__ == '__main__':
     main()
