@@ -114,12 +114,12 @@ class AITranslator:
     }
 
     COMPLEX_WORDS = {
-        "сочн": {  # основа слова
+        "сочн": {
             "th": {
-                "default": "ฉ่ำ",  # базовый перевод
-                "мясо": "เนื้อนุ่มฉ่ำ",  # полная фраза для мяса
-                "стейк": "สเต็กเนื้อนุ่มฉ่ำ",  # полная фраза для стейка
-                "фрукты": "ผลไม้ฉ่ำน้ำ",  # полная фраза для фруктов
+                "default": "ฉ่ำ",
+                "мясо": "เนื้อนุ่มฉ่ำ",
+                "стейк": "สเต็กเนื้อนุ่มฉ่ำ",
+                "фрукты": "ผลไม้ฉ่ำน้ำ",
             }
         },
     }
@@ -172,49 +172,26 @@ class AITranslator:
             cleaned_text = self.clean_text(text)
             print(f"Translating: '{cleaned_text}' from {from_lang} to {to_lang}")
             
-            modified_text = cleaned_text
             if from_lang == "Russian" and to_lang == "Thai":
                 words = cleaned_text.lower().split()
-                for stem, translations in self.COMPLEX_WORDS.items():
-                    matches = [i for i, word in enumerate(words) 
-                             if re.search(f"{stem}[а-я]*", word)]
-                    
-                    for match_idx in matches:
-                        next_word = words[match_idx + 1] if match_idx + 1 < len(words) else ""
-                        
-                        if next_word in translations["th"]:
-                            translation = translations["th"][next_word]
-                        else:
-                            translation = translations["th"]["default"]
-                            
-                        if next_word in translations["th"]:
-                            modified_text = modified_text.replace(
-                                f"{words[match_idx]} {next_word}",
-                                translation
-                            )
-                        else:
-                            modified_text = re.sub(
-                                f"{stem}[а-я]*",
-                                translation,
-                                modified_text,
-                                flags=re.IGNORECASE
-                            )
+                for i, word in enumerate(words):
+                    for stem, translations in self.COMPLEX_WORDS.items():
+                        if re.search(f"{stem}[а-я]*", word):
+                            next_word = words[i + 1] if i + 1 < len(words) else ""
+                            if next_word in ["мясо", "стейк", "фрукты"]:
+                                words[i] = translations["th"][next_word]
+                                words[i + 1] = ""
+                            else:
+                                words[i] = translations["th"]["default"]
+                
+                cleaned_text = " ".join(word for word in words if word)
             
             self.handle_rate_limit()
             
             prompt = f"""
-            You are a professional translator with deep knowledge of {from_lang} and {to_lang}.
-            Translate the following text, keeping special markers <complex>...</complex> unchanged.
-
-            Important rules:
-            1. Preserve all <complex>...</complex> markers exactly as they are
-            2. Translate everything else naturally
-            3. Maintain the original word order where possible
-            4. Keep any punctuation and formatting
-
-            Text: {modified_text}
-
-            Return ONLY the translation with preserved markers.
+            Translate this text from {from_lang} to {to_lang}.
+            Return only the translation without any additional text.
+            Text: {cleaned_text}
             """
             
             for attempt in range(3):
@@ -223,8 +200,6 @@ class AITranslator:
                     
                     if not response.parts:
                         if attempt < 2:
-                            if attempt == 1:
-                                prompt = f"Translate this from {from_lang} to {to_lang}, keeping <complex>...</complex> unchanged: {modified_text}"
                             print(f"Empty response on attempt {attempt + 1}, retrying...")
                             time.sleep(1)
                             continue
@@ -232,23 +207,19 @@ class AITranslator:
                     
                     translated_text = response.text.strip()
                     
-                    final_text = re.sub(r'<complex>(.*?)</complex>', r'\1', translated_text)
-                    
-                    if not final_text or final_text.isspace():
+                    if not translated_text or translated_text.isspace():
                         if attempt < 2:
                             print(f"Empty translation on attempt {attempt + 1}, retrying...")
                             time.sleep(1)
                             continue
                         return "Ошибка: Некорректный перевод"
                     
-                    print(f"Translation success: '{final_text}'")
-                    return final_text
+                    print(f"Translation success: '{translated_text}'")
+                    return translated_text
                     
                 except Exception as e:
                     if attempt < 2:
                         print(f"Translation attempt {attempt + 1} failed: {e}")
-                        if attempt == 1:
-                            prompt = f"Translate: {modified_text}"
                         time.sleep(1)
                         continue
                     raise
@@ -256,10 +227,4 @@ class AITranslator:
         except Exception as e:
             error_msg = str(e)
             print(f"Translation error: {error_msg}")
-            
-            if "quota" in error_msg.lower():
-                return "Ошибка: Превышен лимит запросов. Попробуйте позже."
-            elif "timeout" in error_msg.lower():
-                return "Ошибка: Сервер не отвечает. Попробуйте позже."
-            else:
-                return "Ошибка перевода. Попробуйте другую формулировку."
+            return f"Ошибка перевода: Попробуйте другую формулировку"
