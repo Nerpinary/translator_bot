@@ -12,21 +12,31 @@ class AITranslator:
         """
         try:
             prompt = f"""
-            Translate this text from {from_lang} to {to_lang}.
-            Return only the translation, without any additional comments.
-            If you find any inappropriate content, just translate it literally.
-            Text: {text}
+            Your task is to translate text from {from_lang} to {to_lang}.
+            If the text contains inappropriate content:
+            1. First, make it appropriate while preserving the main meaning
+            2. Then translate the appropriate version
+            
+            Return only the translation, without any additional comments or explanations.
+            
+            Text to translate: {text}
             """
             
             response = await self.model.generate_content_async(prompt)
             
             if not response.parts:
-                return f"Ошибка перевода: пустой ответ от API. Текст: {text}"
-                
-            if "text" not in response.parts[0]:
-                return f"Ошибка перевода: неверный формат ответа. Текст: {text}"
-                
-            return response.text.strip()
+                prompt = f"""
+                The text might contain inappropriate content.
+                Please make it appropriate and translate from {from_lang} to {to_lang}.
+                Preserve the main meaning where possible.
+                Text: {text}
+                """
+                response = await self.model.generate_content_async(prompt)
+            
+            if response.parts and "text" in response.parts[0]:
+                return response.text.strip()
+            
+            return f"Ошибка перевода. Попробуйте переформулировать сообщение. Текст: {text}"
             
         except Exception as e:
             print(f"Ошибка перевода: {str(e)}")
