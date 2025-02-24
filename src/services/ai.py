@@ -172,32 +172,32 @@ class AITranslator:
             cleaned_text = self.clean_text(text)
             print(f"Translating: '{cleaned_text}' from {from_lang} to {to_lang}")
             
+            modified_text = cleaned_text
             if from_lang == "Russian" and to_lang == "Thai":
                 for stem, translations in self.COMPLEX_WORDS.items():
-                    if re.search(f"{stem}[а-я]*", cleaned_text.lower()):
-                        return translations["th"]
+                    matches = re.finditer(f"{stem}[а-я]*", modified_text.lower())
+                    for match in matches:
+                        original_word = modified_text[match.start():match.end()]
+                        modified_text = modified_text.replace(
+                            original_word, 
+                            f"<complex>{translations['th']}</complex>"
+                        )
             
             self.handle_rate_limit()
             
             prompt = f"""
             You are a professional translator with deep knowledge of {from_lang} and {to_lang}.
-            Your task is to translate the following text, ensuring accuracy and natural language.
+            Translate the following text, keeping special markers <complex>...</complex> unchanged.
 
             Important rules:
-            1. ALWAYS provide a translation, even if the word is complex or unusual
-            2. If a direct translation is difficult, provide the closest meaningful equivalent
-            3. For adjectives, consider multiple possible contexts
-            4. For idioms, translate the meaning rather than word-by-word
-            5. Preserve any emotional tone or formality level
-            6. If a word has multiple meanings, choose the most likely one based on common usage
-            7. For unclear cases, provide the most neutral and widely understood variant
+            1. Preserve all <complex>...</complex> markers exactly as they are
+            2. Translate everything else naturally
+            3. Maintain the original word order where possible
+            4. Keep any punctuation and formatting
 
-            Original text: {cleaned_text}
-            Original language: {from_lang}
-            Target language: {to_lang}
+            Text: {modified_text}
 
-            Translate the text above following these rules.
-            Return ONLY the translation, without explanations or alternatives.
+            Return ONLY the translation with preserved markers.
             """
             
             for attempt in range(3):
@@ -207,29 +207,31 @@ class AITranslator:
                     if not response.parts:
                         if attempt < 2:
                             if attempt == 1:
-                                prompt = f"Translate this from {from_lang} to {to_lang}, simple words only: {cleaned_text}"
-                            print(f"Empty response on attempt {attempt + 1}, retrying with simplified prompt...")
+                                prompt = f"Translate this from {from_lang} to {to_lang}, keeping <complex>...</complex> unchanged: {modified_text}"
+                            print(f"Empty response on attempt {attempt + 1}, retrying...")
                             time.sleep(1)
                             continue
                         return "Ошибка: Не удалось получить перевод"
                     
                     translated_text = response.text.strip()
                     
-                    if not translated_text or translated_text.isspace() or len(translated_text) < 2:
+                    final_text = re.sub(r'<complex>(.*?)</complex>', r'\1', translated_text)
+                    
+                    if not final_text or final_text.isspace():
                         if attempt < 2:
-                            print(f"Invalid translation on attempt {attempt + 1}, retrying...")
+                            print(f"Empty translation on attempt {attempt + 1}, retrying...")
                             time.sleep(1)
                             continue
                         return "Ошибка: Некорректный перевод"
                     
-                    print(f"Translation success: '{translated_text}'")
-                    return translated_text
+                    print(f"Translation success: '{final_text}'")
+                    return final_text
                     
                 except Exception as e:
                     if attempt < 2:
                         print(f"Translation attempt {attempt + 1} failed: {e}")
                         if attempt == 1:
-                            prompt = f"Translate: {cleaned_text}"
+                            prompt = f"Translate: {modified_text}"
                         time.sleep(1)
                         continue
                     raise
