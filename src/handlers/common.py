@@ -7,10 +7,22 @@ class TranslatorStates(StatesGroup):
     waiting_for_text_en_th = State()
     waiting_for_text_th_en = State()
 
+async def update_keyboard(message: types.Message):
+    """Обновляет клавиатуру"""
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(types.KeyboardButton("🇷🇺 Русский → 🇹🇭 Тайский"))
+    keyboard.add(types.KeyboardButton("🇹🇭 Тайский → 🇷🇺 Русский"))
+    keyboard.add(types.KeyboardButton("🇬🇧 Английский → 🇹🇭 Тайский"))
+    keyboard.add(types.KeyboardButton("🇹🇭 Тайский → 🇬🇧 Английский"))
+    
+    await message.answer(
+        "🔄 Клавиатура обновлена!\n"
+        "Выберите направление перевода:",
+        reply_markup=keyboard
+    )
+
 async def cmd_start(message: types.Message):
-    """
-    Обработчик команды /start
-    """
+    """Обработчик команды /start"""
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(types.KeyboardButton("🇷🇺 Русский → 🇹🇭 Тайский"))
     keyboard.add(types.KeyboardButton("🇹🇭 Тайский → 🇷🇺 Русский"))
@@ -25,3 +37,4 @@ async def cmd_start(message: types.Message):
 
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(cmd_start, commands=["start", "help"])
+    dp.register_message_handler(update_keyboard, commands=["keyboard"])  # Новая команда
