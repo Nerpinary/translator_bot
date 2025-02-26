@@ -196,7 +196,7 @@ class AITranslator:
             
             for attempt in range(3):
                 try:
-                    response = await self.model.generate_content(prompt)
+                    response = self.model.generate_content(prompt)
                     
                     if not response.text:
                         if attempt < 2:
