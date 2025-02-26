@@ -134,7 +134,7 @@ class AITranslator:
         """Ленивая инициализация модели"""
         if self._model is None:
             genai.configure(api_key=GOOGLE_API_KEY)
-            self._model = genai.GenerativeModel('gemini-pro')
+            self._model = genai.GenerativeModel('gemini-2.0-flash')
         return self._model
 
     def clean_text(self, text: str) -> str:
@@ -196,9 +196,9 @@ class AITranslator:
             
             for attempt in range(3):
                 try:
-                    response = await self.model.generate_content_async(prompt)
+                    response = await self.model.generate_content(prompt)
                     
-                    if not response.parts:
+                    if not response.text:
                         if attempt < 2:
                             print(f"Empty response on attempt {attempt + 1}, retrying...")
                             time.sleep(1)
